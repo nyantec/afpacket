@@ -7,7 +7,7 @@ use super::sync::RawPacketStream as SyncRawPacketStream;
 use futures_lite::io::{AsyncRead, AsyncWrite};
 use async_io::Async;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct RawPacketStream(Arc<Async<SyncRawPacketStream>>);
 
 impl RawPacketStream {
