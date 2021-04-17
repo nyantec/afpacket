@@ -1,6 +1,6 @@
 [package]
 name = "afpacket"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["The afpacket Authors <oss@nyantec.com>"]
 description = "Bindings for Linux raw packet sockets (AF_PACKET), and an async wrapper"
 repository = "https://github.com/nyantec/afpacket"
@@ -18,3 +18,6 @@ async-io = { version = "1.4", optional = true }
 [features]
 async = [ "futures-lite", "async-io" ]
 default = [ "async" ]
+
+[dev-dependencies]
+nom = "6.1"
