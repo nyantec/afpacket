@@ -4,6 +4,7 @@ use std::pin::Pin;
 use std::sync::Arc;
 use std::os::unix::prelude::{AsRawFd, FromRawFd, RawFd};
 use super::sync::RawPacketStream as SyncRawPacketStream;
+pub use super::sync::{Filter, FilterProgram};
 use futures_lite::io::{AsyncRead, AsyncWrite};
 use async_io::Async;
 
@@ -21,6 +22,10 @@ impl RawPacketStream {
 
     pub fn set_promisc(&mut self, name: &str, state: bool) -> Result<()> {
         (&*self.0).as_ref().set_promisc_internal(name, state)
+    }
+
+    pub fn set_bpf_filter(&mut self, filter: FilterProgram) -> Result<()> {
+        (&*self.0).as_ref().set_bpf_filter_internal(filter)
     }
 }
 

@@ -1,6 +1,6 @@
 [package]
 name = "afpacket"
-version = "0.1.3"
+version = "0.1.4"
 authors = ["The afpacket Authors <oss@nyantec.com>"]
 description = "Bindings for Linux raw packet sockets (AF_PACKET), and an async wrapper"
 repository = "https://github.com/nyantec/afpacket"

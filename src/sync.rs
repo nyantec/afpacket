@@ -5,12 +5,42 @@ use std::io::{Error, ErrorKind, Read, Result, Write};
 use std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd, RawFd};
 
 use libc::{sockaddr_ll, sockaddr_storage, socket, packet_mreq, setsockopt};
-use libc::{AF_PACKET, ETH_P_ALL, SOCK_RAW, SOL_PACKET, PACKET_MR_PROMISC,
-        PACKET_ADD_MEMBERSHIP, PACKET_DROP_MEMBERSHIP};
+use libc::{AF_PACKET, ETH_P_ALL, SOCK_RAW, SOL_PACKET, SOL_SOCKET, PACKET_MR_PROMISC,
+        SO_ATTACH_FILTER, PACKET_ADD_MEMBERSHIP, PACKET_DROP_MEMBERSHIP};
 
 /// Packet sockets are used to receive or send raw packets at OSI 2 level.
 #[derive(Debug, Clone)]
 pub struct RawPacketStream(RawFd);
+
+pub type Filter = (u16, u8, u8, u32);
+pub type FilterProgram = Vec<Filter>;
+
+#[derive(Debug, Clone)]
+#[repr(C)]
+struct sock_filter {
+    code: u16,
+    jt: u8,
+    jf: u8,
+    k: u32,
+}
+
+#[derive(Debug, Clone)]
+#[repr(C)]
+struct sock_fprog {
+    len: u16,
+    filter: *const sock_filter,
+}
+
+impl From<Filter> for sock_filter {
+    fn from(f: Filter) -> sock_filter {
+        sock_filter {
+            code: f.0,
+            jt: f.1,
+            jf: f.2,
+            k: f.3,
+        }
+    }
+}
 
 impl RawPacketStream {
     /// Create new raw packet stream binding to all interfaces
@@ -72,7 +102,31 @@ impl RawPacketStream {
             mreq.mr_ifindex = idx;
             mreq.mr_type = PACKET_MR_PROMISC as u16;
 
-            setsockopt(self.0, SOL_PACKET, packet_membership, (&mreq as *const packet_mreq) as *const libc::c_void, std::mem::size_of::<packet_mreq>() as u32);
+            let res = setsockopt(self.0, SOL_PACKET, packet_membership, (&mreq as *const packet_mreq) as *const libc::c_void, std::mem::size_of::<packet_mreq>() as u32);
+            if res == -1 {
+                return Err(Error::last_os_error());
+            }
+        }
+
+        Ok(())
+    }
+
+    pub fn set_bpf_filter(&mut self, filter: FilterProgram) -> Result<()> {
+        self.set_bpf_filter_internal(filter)
+    }
+
+    pub(crate) fn set_bpf_filter_internal(&self, filter: FilterProgram) -> Result<()> {
+        let filters: Vec<sock_filter> = filter.into_iter().map(|x| x.into()).collect();
+        let program = sock_fprog {
+            len: filters.len() as u16,
+            filter: filters.as_ptr(),
+        };
+
+        unsafe {
+            let res = setsockopt(self.0, SOL_SOCKET, SO_ATTACH_FILTER, &program as *const _ as *const libc::c_void, std::mem::size_of::<sock_fprog>() as u32);
+            if res == -1 {
+                return Err(Error::last_os_error());
+            }
         }
 
         Ok(())
