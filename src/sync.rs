@@ -6,7 +6,7 @@ use std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd, RawFd};
 
 use libc::{sockaddr_ll, sockaddr_storage, socket, packet_mreq, setsockopt};
 use libc::{AF_PACKET, ETH_P_ALL, SOCK_RAW, SOL_PACKET, SOL_SOCKET, PACKET_MR_PROMISC,
-        SO_ATTACH_FILTER, PACKET_ADD_MEMBERSHIP, PACKET_DROP_MEMBERSHIP};
+        SO_ATTACH_FILTER, PACKET_ADD_MEMBERSHIP, PACKET_DROP_MEMBERSHIP, MSG_DONTWAIT};
 
 /// Packet sockets are used to receive or send raw packets at OSI 2 level.
 #[derive(Debug, Clone)]
@@ -130,6 +130,14 @@ impl RawPacketStream {
         }
 
         Ok(())
+    }
+
+    pub fn drain(&mut self) {
+        let mut buf = [0u8; 1];
+        loop {
+            let rv = unsafe { libc::recv(self.0, buf.as_mut_ptr() as *mut libc::c_void, buf.len(), MSG_DONTWAIT) };
+            if rv == -1 { break; }
+        }
     }
 }
 
