@@ -27,6 +27,10 @@ impl RawPacketStream {
     pub fn set_bpf_filter(&mut self, filter: FilterProgram) -> Result<()> {
         (&*self.0).as_ref().set_bpf_filter_internal(filter)
     }
+
+    pub fn drain(&mut self) -> () {
+        (&*self.0).as_ref().drain_internal()
+    }
 }
 
 impl AsyncRead for RawPacketStream {

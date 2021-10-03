@@ -133,6 +133,10 @@ impl RawPacketStream {
     }
 
     pub fn drain(&mut self) {
+        self.drain_internal()
+    }
+
+    pub(crate) fn drain_internal(&self) {
         let mut buf = [0u8; 1];
         loop {
             let rv = unsafe { libc::recv(self.0, buf.as_mut_ptr() as *mut libc::c_void, buf.len(), MSG_DONTWAIT) };
