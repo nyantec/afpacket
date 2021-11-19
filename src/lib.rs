@@ -4,12 +4,12 @@
 //! > protocol modules in user space on top of the physical layer.
 //!   -- [packet(7)](http://man7.org/linux/man-pages/man7/packet.7.html)
 
-#[cfg(feature = "async")]
+#[cfg(feature = "async-std")]
 /// Async wrapper for use with `futures` or `async-std`
 ///
 /// Example usage:
 /// ```
-/// use afpacket::r#async::RawPacketStream;
+/// use afpacket::async_std::RawPacketStream;
 /// use futures_lite::{future, AsyncReadExt};
 /// use nom::HexDisplay;
 ///
@@ -24,7 +24,28 @@
 ///     })
 /// }
 /// ```
-pub mod r#async;
+pub mod async_std;
+
+#[cfg(feature = "tokio")]
+/// Async wrapper for use with `tokio`
+///
+/// Example usage:
+/// ```
+/// use afpacket::tokio::RawPacketStream;
+/// use nom::HexDisplay;
+///
+/// fn main() {
+///     future::block_on(async {
+///         let mut ps = RawPacketStream::new().unwrap();
+///         loop {
+///             let mut buf = [0u8; 1500];
+///             ps.read(&mut buf).await.unwrap();
+///             println!("{}", buf.to_hex(24));
+///         }
+///     })
+/// }
+/// ```
+pub mod tokio;
 
 /// The bindings
 ///

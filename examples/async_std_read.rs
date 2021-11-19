@@ -1,4 +1,4 @@
-use afpacket::r#async::RawPacketStream;
+use afpacket::async_std::RawPacketStream;
 use futures_lite::{future, AsyncReadExt};
 use nom::HexDisplay;
 

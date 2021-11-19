@@ -1,6 +1,6 @@
 [package]
 name = "afpacket"
-version = "0.1.6"
+version = "0.2.0"
 authors = ["The afpacket Authors <oss@nyantec.com>"]
 description = "Bindings for Linux raw packet sockets (AF_PACKET), and an async wrapper"
 repository = "https://github.com/nyantec/afpacket"
@@ -14,10 +14,12 @@ edition = "2018"
 libc = "0.2"
 futures-lite = { version = "1.11", optional = true }
 async-io = { version = "1.4", optional = true }
+tokio = { version = "1.14", features = [ "net" ], optional = true }
 
 [features]
-async = [ "futures-lite", "async-io" ]
-default = [ "async" ]
+async-std = [ "futures-lite", "async-io" ]
+async-tokio = [ "futures-lite", "tokio" ]
 
 [dev-dependencies]
 nom = "6.1"
+tokio = { version = "1.14", features = [ "net", "macros", "rt-multi-thread", "io-util" ] }
