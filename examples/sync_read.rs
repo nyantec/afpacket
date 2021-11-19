@@ -1,4 +1,5 @@
 use afpacket::sync::RawPacketStream;
+use std::io::Read;
 use nom::HexDisplay;
 
 fn main() {
