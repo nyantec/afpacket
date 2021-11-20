@@ -54,8 +54,58 @@ impl AsyncRead for RawPacketStream {
     }
 }
 
+impl<'a> AsyncRead for &'a RawPacketStream {
+    fn poll_read(
+        self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+        buf: &mut ReadBuf,
+    ) -> Poll<Result<()>> {
+        loop {
+            let mut guard = ready!(self.0.poll_read_ready(cx))?;
+
+            match guard.try_io(|inner| inner.get_ref().read(buf.initialize_unfilled())) {
+                Ok(result) => {
+                    buf.advance(result?);
+                    return Poll::Ready(Ok(()));
+                },
+                Err(_would_block) => continue,
+            }
+        }
+    }
+}
 
 impl AsyncWrite for RawPacketStream {
+    fn poll_write(
+        self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+        buf: &[u8]
+    ) -> Poll<Result<usize>> {
+        loop {
+            let mut guard = ready!(self.0.poll_write_ready(cx))?;
+
+            match guard.try_io(|inner| inner.get_ref().write(buf)) {
+                Ok(result) => return Poll::Ready(result),
+                Err(_would_block) => continue,
+            }
+        }
+    }
+
+    fn poll_flush(
+        self: Pin<&mut Self>,
+        _cx: &mut Context<'_>,
+    ) -> Poll<Result<()>> {
+        Poll::Ready(Ok(()))
+    }
+
+    fn poll_shutdown(
+        self: Pin<&mut Self>,
+        _cx: &mut Context<'_>,
+    ) -> Poll<Result<()>> {
+        Poll::Ready(Ok(()))
+    }
+}
+
+impl<'a> AsyncWrite for &'a RawPacketStream {
     fn poll_write(
         self: Pin<&mut Self>,
         cx: &mut Context<'_>,

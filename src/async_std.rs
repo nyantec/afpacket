@@ -39,7 +39,25 @@ impl AsyncRead for RawPacketStream {
     }
 }
 
+impl<'a> AsyncRead for &'a RawPacketStream {
+    fn poll_read(self: Pin<&mut Self>, ctx: &mut Context, buf: &mut [u8]) -> Poll<Result<usize>> {
+        Pin::new(&mut &*self.0).poll_read(ctx, buf)
+    }
+}
+
 impl AsyncWrite for RawPacketStream {
+    fn poll_write(self: Pin<&mut Self>, ctx: &mut Context, buf: &[u8]) -> Poll<Result<usize>> {
+        Pin::new(&mut &*self.0).poll_write(ctx, buf)
+    }
+    fn poll_flush(self: Pin<&mut Self>, ctx: &mut Context) -> Poll<Result<()>> {
+        Pin::new(&mut &*self.0).poll_flush(ctx)
+    }
+    fn poll_close(self: Pin<&mut Self>, ctx: &mut Context) -> Poll<Result<()>> {
+        Pin::new(&mut &*self.0).poll_close(ctx)
+    }
+}
+
+impl<'a> AsyncWrite for &'a RawPacketStream {
     fn poll_write(self: Pin<&mut Self>, ctx: &mut Context, buf: &[u8]) -> Poll<Result<usize>> {
         Pin::new(&mut &*self.0).poll_write(ctx, buf)
     }
