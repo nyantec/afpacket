@@ -137,7 +137,8 @@ impl<'a> AsyncWrite for &'a RawPacketStream {
 }
 
 impl From<SyncRawPacketStream> for RawPacketStream {
-    fn from(sync: SyncRawPacketStream) -> RawPacketStream {
+    fn from(mut sync: SyncRawPacketStream) -> RawPacketStream {
+        sync.set_non_blocking().expect("could not set non-blocking");
         RawPacketStream(Arc::new(AsyncFd::new(sync).expect("oopsie whoopsie")))
     }
 }

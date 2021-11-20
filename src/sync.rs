@@ -143,6 +143,20 @@ impl RawPacketStream {
             if rv == -1 { break; }
         }
     }
+
+    // Put the file descriptor in non-blocking mode.
+    pub fn set_non_blocking(&mut self) -> Result<()> {
+        unsafe {
+            let mut res = libc::fcntl(self.0, libc::F_GETFL);
+            if res != -1 {
+                res = libc::fcntl(self.0, libc::F_SETFL, res | libc::O_NONBLOCK);
+            }
+            if res == -1 {
+                return Err(Error::last_os_error());
+            }
+        }
+        Ok(())
+    }
 }
 
 fn index_by_name(name: &str) -> Result<i32> {
